@@ -361,6 +361,7 @@ class LazySupervisedDataset(Dataset):
             image_folder = self.multimodal_cfg['image_folder']
             processor = self.multimodal_cfg['image_processor']
             image = Image.open(os.path.join(image_folder, image_file)).convert('RGB')
+            
             if self.multimodal_cfg['image_aspect_ratio'] == 'keep':
                 max_hw, min_hw = max(image.size), min(image.size)
                 aspect_ratio = max_hw / min_hw
@@ -384,6 +385,7 @@ class LazySupervisedDataset(Dataset):
                 image = processor.preprocess(image, return_tensors='pt')['pixel_values'][0]
             else:
                 image = processor.preprocess(image, return_tensors='pt')['pixel_values'][0]
+            
             cur_token_len = (image.shape[1]//14) * (image.shape[2]//14)   # FIXME: 14 is hardcoded patch size
             sources = preprocess_multimodal(
                 copy.deepcopy([e["conversations"] for e in sources]),
