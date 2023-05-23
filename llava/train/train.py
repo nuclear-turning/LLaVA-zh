@@ -21,12 +21,11 @@ import json
 import logging
 import pathlib
 from typing import Dict, Optional, Sequence
-
+from peft import PeftModel
 import torch
 
 import transformers
 from torch.utils.data import Dataset
-from llava.model.llava import LlavaConfig
 from llava.train.llava_trainer import LLaVATrainer
 
 from llava import conversation as conversation_lib
@@ -34,7 +33,6 @@ from llava import LlavaLlamaForCausalLM
 
 from PIL import Image
 import torch.nn as nn
-from peft import PeftModel
 
 # TODO: import and use code from ../data/dataset.py
 
@@ -52,7 +50,6 @@ DEFAULT_IM_END_TOKEN = "<im_end>"
 @dataclass
 class ModelArguments:
     model_name_or_path: Optional[str] = field(default="facebook/opt-125m")
-    base_model_path: Optional[str] = field(default=None)
     version: Optional[str] = field(default="v0")
     freeze_backbone: bool = field(default=False)
     tune_mm_mlp_adapter: bool = field(default=False)
@@ -361,7 +358,6 @@ class LazySupervisedDataset(Dataset):
             image_folder = self.multimodal_cfg['image_folder']
             processor = self.multimodal_cfg['image_processor']
             image = Image.open(os.path.join(image_folder, image_file)).convert('RGB')
-            
             if self.multimodal_cfg['image_aspect_ratio'] == 'keep':
                 max_hw, min_hw = max(image.size), min(image.size)
                 aspect_ratio = max_hw / min_hw
@@ -385,7 +381,6 @@ class LazySupervisedDataset(Dataset):
                 image = processor.preprocess(image, return_tensors='pt')['pixel_values'][0]
             else:
                 image = processor.preprocess(image, return_tensors='pt')['pixel_values'][0]
-            
             cur_token_len = (image.shape[1]//14) * (image.shape[2]//14)   # FIXME: 14 is hardcoded patch size
             sources = preprocess_multimodal(
                 copy.deepcopy([e["conversations"] for e in sources]),
@@ -460,62 +455,35 @@ def make_supervised_data_module(tokenizer: transformers.PreTrainedTokenizer,
                 eval_dataset=None,
                 data_collator=data_collator)
 
-def init_lora(model):
-    from peft import LoraConfig,get_peft_model
-    config = LoraConfig(
-        r=8,
-        lora_alpha=16,
-        target_modules=['q_proj', 'v_proj'],
-        lora_dropout=0.1,
-        bias="none",
-        inference_mode=False
-    )
-    lora_model = get_peft_model(model,config)
-    return lora_model
+
 def train():
     parser = transformers.HfArgumentParser(
         (ModelArguments, DataArguments, TrainingArguments))
     model_args, data_args, training_args = parser.parse_args_into_dataclasses()
 
     if model_args.vision_tower is not None:
-
-
-        llm_model = transformers.LlamaForCausalLM.from_pretrained(
-            model_args.base_model_path,
-            torch_dtype=torch.float16,
-            device_map="auto",
-        )
-        llm_model = PeftModel.from_pretrained(
-            llm_model,
-            model_args.model_name_or_path, # specific checkpoint path from "Chinese-Vicuna/Chinese-Vicuna-lora-13b-belle-and-guanaco"
-            torch_dtype=torch.float16,
-            device_map="auto",
-        )
-        model_config = LlavaConfig.from_pretrained(model_args.base_model_path)
-        model = LlavaLlamaForCausalLM(model_config)
-        model.load_state_dict(llm_model.state_dict(),strict=False)
-    else:
-        
-        model = transformers.LlamaForCausalLM.from_pretrained(
-            model_args.base_model_path,
+        model = LlavaLlamaForCausalLM.from_pretrained(
+            model_args.model_name_or_path,
             cache_dir=training_args.cache_dir,
-            torch_dtype=torch.float16,
-            device_map="auto",
+            # torch_dtype=torch.float16,
+            device_map={"":0}
         )
-        
-        model = PeftModel.from_pretrained(
-            model,
-            model_args.model_name_or_path, # specific checkpoint path from "Chinese-Vicuna/Chinese-Vicuna-lora-13b-belle-and-guanaco"
-            torch_dtype=torch.float16,
-            device_map="auto",
+    else:
+        model = transformers.LlamaForCausalLM.from_pretrained(
+            model_args.model_name_or_path,
+            cache_dir=training_args.cache_dir,
+            device_map="auto"
         )
     model.config.use_cache = False
 
     if model_args.freeze_backbone:
-        model.model.requires_grad_(False)
+        for name, param in model.named_parameters():
+            if not any(nd in name for nd in ["layers.31", "layers.30","lm_head.weight","model.norm.weight"]):
+                param.requires_grad_(False)
+        # model.model.requires_grad_(False)
 
     tokenizer = transformers.AutoTokenizer.from_pretrained(
-        model_args.base_model_path,
+        model_args.model_name_or_path,
         cache_dir=training_args.cache_dir,
         model_max_length=training_args.model_max_length,
         padding_side="right",
@@ -540,7 +508,7 @@ def train():
         conversation_lib.default_conversation = conversation_lib.conv_templates["vicuna_v1_1"]
 
     if model_args.vision_tower is not None:
-        model_vision_dict = model.initialize_vision_modules(
+        model_vision_dict = model.model.initialize_vision_modules(
             vision_tower=model_args.vision_tower,
             mm_vision_select_layer=model_args.mm_vision_select_layer,
             pretrain_mm_mlp_adapter=model_args.pretrain_mm_mlp_adapter
@@ -592,11 +560,12 @@ def train():
 
                 FSDP.__init__ = patch_FSDP_use_orig_params(FSDP.__init__)
 
+    # model.eval()
+    # print(tokenizer("你好",return_tensors="pt").input_ids)
+    # out = model.generate(tokenizer("你好",return_tensors="pt").input_ids)
+    # print(tokenizer.decode(out[0]))
     data_module = make_supervised_data_module(tokenizer=tokenizer,
                                               data_args=data_args)
-    
-    # model = init_lora(model) 
-    print_trainable_parameters(model)
     trainer = LLaVATrainer(model=model,
                     tokenizer=tokenizer,
                     args=training_args,
@@ -610,18 +579,6 @@ def train():
     safe_save_model_for_hf_trainer(trainer=trainer,
                                    output_dir=training_args.output_dir)
 
-def print_trainable_parameters(model):
-    trainable_params = 0
-    all_param = 0
-    for _, param in model.named_parameters():
-        num_params = param.numel()
-        if num_params == 0 and hasattr(param, "ds_numel"):
-            num_params = param.ds_numel
 
-        all_param += num_params
-        if param.requires_grad:
-            trainable_params += num_params
-    print(
-        f"trainable params: {trainable_params} || all params: {all_param} || trainable%: {100 * trainable_params / all_param}")
 if __name__ == "__main__":
     train()

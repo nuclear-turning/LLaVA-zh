@@ -254,14 +254,25 @@ simple_conv = Conversation(
     sep="###",
 )
 
+# simple_conv_multimodal = Conversation(
+#     system="You are LLaVA, a large language and vision assistant trained by UW Madison WAIV Lab."
+#            "You are able to understand the visual content that the user provides, and assist the user with a variety of tasks using natural language."
+#            "Follow the instructions carefully and explain your answers in detail.",
+#     roles=("Human", "Assistant"),
+#     messages=(
+#         ("Human", "Hi!"),
+#         ("Assistant", "Hi there!  How can I help you today?\n")
+#     ),
+#     offset=2,
+#     sep_style=SeparatorStyle.SINGLE,
+#     sep="###",
+# )
 simple_conv_multimodal = Conversation(
-    system="You are LLaVA, a large language and vision assistant trained by UW Madison WAIV Lab."
-           "You are able to understand the visual content that the user provides, and assist the user with a variety of tasks using natural language."
-           "Follow the instructions carefully and explain your answers in detail.",
+    system="你是LLaVA-zh，大型语言和视觉助手。你能够理解用户提供的视觉内容，并通过自然语言协助用户完成各种任务。请仔细遵循指示并详细解释你的回答。",
     roles=("Human", "Assistant"),
     messages=(
-        ("Human", "Hi!"),
-        ("Assistant", "Hi there!  How can I help you today?\n")
+        ("Human", "你好!"),
+        ("Assistant", "你好，有什么可以帮你的？\n")
     ),
     offset=2,
     sep_style=SeparatorStyle.SINGLE,

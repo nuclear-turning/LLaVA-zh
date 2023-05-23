@@ -18,9 +18,7 @@ from transformers import AutoTokenizer, AutoModelForCausalLM
 import torch
 import uvicorn
 from functools import partial
-import sys
-import os
-sys.path.insert(0,os.path.abspath(os.path.join(__file__,'../../..')))
+
 from llava.constants import WORKER_HEART_BEAT_INTERVAL
 from llava.utils import (build_logger, server_error_msg,
     pretty_print_semaphore)
@@ -346,8 +344,8 @@ if __name__ == "__main__":
     parser.add_argument("--worker-address", type=str,
         default="http://localhost:21002")
     parser.add_argument("--controller-address", type=str,
-        default="http://localhost:7488")
-    parser.add_argument("--model-path", type=str, default="/home/gpuall/hehx/MLLM/LLaVA-zh/checkpoints/llava-7b-zh-pretrain")
+        default="http://localhost:21001")
+    parser.add_argument("--model-path", type=str, default="facebook/opt-350m")
     parser.add_argument("--model-name", type=str)
     parser.add_argument("--multi-modal", action="store_true", help="Multimodal mode is automatically detected with model name, please make sure `llava` is included in the model path.")
     parser.add_argument("--keep-aspect-ratio", action="store_true")

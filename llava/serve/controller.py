@@ -17,9 +17,7 @@ from fastapi.responses import StreamingResponse
 import numpy as np
 import requests
 import uvicorn
-import sys
-import os
-sys.path.insert(0,os.path.abspath(os.path.join(__file__,'../../..')))
+
 from llava.constants import CONTROLLER_HEART_BEAT_EXPIRATION
 from llava.utils import build_logger, server_error_msg
 
@@ -289,8 +287,8 @@ async def worker_api_get_status(request: Request):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--host", type=str, default="0.0.0.0")
-    parser.add_argument("--port", type=int, default=7488)
+    parser.add_argument("--host", type=str, default="localhost")
+    parser.add_argument("--port", type=int, default=21001)
     parser.add_argument("--dispatch-method", type=str, choices=[
         "lottery", "shortest_queue"], default="shortest_queue")
     args = parser.parse_args()

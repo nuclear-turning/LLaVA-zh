@@ -7,9 +7,7 @@ import time
 
 import gradio as gr
 import requests
-import sys
-import os
-sys.path.insert(0,os.path.abspath(os.path.join(__file__,'../../..')))
+
 from llava.conversation import (default_conversation, conv_templates,
                                    SeparatorStyle)
 from llava.constants import LOGDIR
@@ -414,7 +412,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--host", type=str, default="0.0.0.0")
     parser.add_argument("--port", type=int)
-    parser.add_argument("--controller-url", type=str, default="http://localhost:7488")
+    parser.add_argument("--controller-url", type=str, default="http://localhost:21001")
     parser.add_argument("--concurrency-count", type=int, default=8)
     parser.add_argument("--model-list-mode", type=str, default="once",
         choices=["once", "reload"])
