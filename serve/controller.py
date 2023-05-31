@@ -17,7 +17,10 @@ from fastapi.responses import StreamingResponse
 import numpy as np
 import requests
 import uvicorn
+import os
+import sys
 
+sys.path.append(os.getcwd())
 from llava.constants import CONTROLLER_HEART_BEAT_EXPIRATION
 from llava.utils import build_logger, server_error_msg
 

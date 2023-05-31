@@ -7,14 +7,18 @@ import time
 
 import gradio as gr
 import requests
+import os
+import sys
 
+sys.path.append(os.getcwd())
 from llava.conversation import (default_conversation, conv_templates,
                                    SeparatorStyle)
 from llava.constants import LOGDIR
 from llava.utils import (build_logger, server_error_msg,
     violates_moderation, moderation_msg)
-from llava.serve.gradio_patch import Chatbot as grChatbot
-from llava.serve.gradio_css import code_highlight_css
+    
+from serve.gradio_patch import Chatbot as grChatbot
+from serve.gradio_css import code_highlight_css
 import hashlib
 
 
@@ -411,7 +415,7 @@ def build_demo(embed_mode):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--host", type=str, default="0.0.0.0")
-    parser.add_argument("--port", type=int)
+    parser.add_argument("--port", type=int,default=7748)
     parser.add_argument("--controller-url", type=str, default="http://localhost:21001")
     parser.add_argument("--concurrency-count", type=int, default=8)
     parser.add_argument("--model-list-mode", type=str, default="once",

@@ -18,7 +18,10 @@ from transformers import AutoTokenizer, AutoModelForCausalLM
 import torch
 import uvicorn
 from functools import partial
+import os
+import sys
 
+sys.path.append(os.getcwd())
 from llava.constants import WORKER_HEART_BEAT_INTERVAL
 from llava.utils import (build_logger, server_error_msg,
     pretty_print_semaphore)
@@ -54,7 +57,7 @@ def load_model(model_path, num_gpus):
             "device_map": "auto",
             "max_memory": {i: "13GiB" for i in range(num_gpus)},
         }
-
+    model_path = "/home/gpuall/hehx/MLLM/LLaVA-zh/checkpoints/llava-7b-zh-finetune"
     tokenizer = AutoTokenizer.from_pretrained(model_path)
     if 'llava' in model_path.lower():
         model = LlavaLlamaForCausalLM.from_pretrained(model_path, torch_dtype=torch.float16, low_cpu_mem_usage=True, **kwargs)
@@ -64,8 +67,8 @@ def load_model(model_path, num_gpus):
     image_processor = None
 
     if 'llava' in model_path.lower():
-        from transformers import CLIPImageProcessor, CLIPVisionModel
-        image_processor = CLIPImageProcessor.from_pretrained(model.config.mm_vision_tower, torch_dtype=torch.float16)
+        from transformers import ChineseCLIPProcessor, ChineseCLIPVisionModel
+        image_processor = ChineseCLIPProcessor.from_pretrained(model.config.mm_vision_tower, torch_dtype=torch.float16)
 
         mm_use_im_start_end = getattr(model.config, "mm_use_im_start_end", False)
         tokenizer.add_tokens([DEFAULT_IMAGE_PATCH_TOKEN], special_tokens=True)
@@ -74,7 +77,7 @@ def load_model(model_path, num_gpus):
 
         vision_tower = model.model.vision_tower[0]
         if vision_tower.device.type == 'meta':
-            vision_tower = CLIPVisionModel.from_pretrained(vision_tower.config._name_or_path, torch_dtype=torch.float16, low_cpu_mem_usage=True).cuda()
+            vision_tower = ChineseCLIPVisionModel.from_pretrained(vision_tower.config._name_or_path, torch_dtype=torch.float16, low_cpu_mem_usage=True).cuda()
             model.model.vision_tower[0] = vision_tower
         else:
             vision_tower.to(device='cuda', dtype=torch.float16)

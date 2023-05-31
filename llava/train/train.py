@@ -465,7 +465,8 @@ def train():
         model = LlavaLlamaForCausalLM.from_pretrained(
             model_args.model_name_or_path,
             cache_dir=training_args.cache_dir,
-            # torch_dtype=torch.float16,
+            torch_dtype=torch.float16,
+            # device_map="auto"
             device_map={"":0}
         )
     else:
