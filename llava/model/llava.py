@@ -22,7 +22,7 @@ from torch.nn import CrossEntropyLoss
 
 from transformers import AutoConfig, AutoModelForCausalLM, \
                          LlamaConfig, LlamaModel, LlamaForCausalLM, \
-                         ChineseCLIPVisionModel,ChineseCLIPImageProcessor
+                         ChineseCLIPVisionModel, ChineseCLIPImageProcessor
 
 from transformers.modeling_outputs import BaseModelOutputWithPast, CausalLMOutputWithPast
 
@@ -46,7 +46,7 @@ class LlavaLlamaModel(LlamaModel):
         if hasattr(config, "mm_vision_tower"):
             # HACK: for FSDP
             self.vision_tower = [ChineseCLIPVisionModel.from_pretrained(config.mm_vision_tower)]
-            # self.vision_tower = ChineseCLIPVisionModel.from_pretrained(config.mm_vision_tower)
+            # self.vision_tower = CLIPVisionModel.from_pretrained(config.mm_vision_tower)
 
         if hasattr(config, "use_mm_proj"):
             self.mm_projector = nn.Linear(config.mm_hidden_size, config.hidden_size)
@@ -141,6 +141,7 @@ class LlavaLlamaModel(LlamaModel):
                     # multimodal LLM, but the current sample is not multimodal
                     cur_input_embeds = cur_input_embeds + (0. * dummy_image_features).sum()
                     new_input_embeds.append(cur_input_embeds)
+                    cur_image_idx += 1
                     continue
                 if vision_tower.config.use_im_start_end:
                     cur_image_features = image_features[cur_image_idx]
@@ -173,6 +174,7 @@ class LlavaLlamaModel(LlamaModel):
                     else:
                         cur_new_input_embeds = torch.cat((cur_input_embeds[:mask_index_start], cur_image_features, cur_input_embeds[mask_index_start+num_patches:]), dim=0)
                     new_input_embeds.append(cur_new_input_embeds)
+                    cur_image_idx += 1
             inputs_embeds = torch.stack(new_input_embeds, dim=0)
 
         return super(LlavaLlamaModel, self).forward(
@@ -194,6 +196,9 @@ class LlavaLlamaForCausalLM(LlamaForCausalLM):
 
         # Initialize weights and apply final processing
         self.post_init()
+
+    def get_model(self):
+        return self.model
 
     def forward(
         self,
@@ -279,7 +284,7 @@ class LlavaLlamaForCausalLM(LlamaForCausalLM):
 
     def initialize_vision_tokenizer(self, mm_use_im_start_end, tokenizer, device,
                                     tune_mm_mlp_adapter=False, pretrain_mm_mlp_adapter=None):
-        vision_config = self.model.vision_tower[0].config
+        vision_config = self.get_model().vision_tower[0].config
         vision_config.use_im_start_end = mm_use_im_start_end
         tokenizer.add_tokens([DEFAULT_IMAGE_PATCH_TOKEN], special_tokens=True)
         self.resize_token_embeddings(len(tokenizer))
@@ -302,7 +307,7 @@ class LlavaLlamaForCausalLM(LlamaForCausalLM):
                 output_embeddings[-num_new_tokens:] = output_embeddings_avg
 
             if tune_mm_mlp_adapter:
-                self.model.orig_embeds_params = [self.get_input_embeddings().weight.data.clone().to(device=device)]
+                self.get_model().orig_embeds_params = [self.get_input_embeddings().weight.data.clone().to(device=device)]
                 for p in self.get_input_embeddings().parameters():
                     p.requires_grad = True
                 for p in self.get_output_embeddings().parameters():
@@ -311,9 +316,13 @@ class LlavaLlamaForCausalLM(LlamaForCausalLM):
             if pretrain_mm_mlp_adapter:
                 mm_projector_weights = torch.load(pretrain_mm_mlp_adapter, map_location='cpu')
                 embed_tokens_weight = mm_projector_weights['model.embed_tokens.weight']
-                assert input_embeddings.shape == embed_tokens_weight.shape
                 assert num_new_tokens == 2
-                input_embeddings[-num_new_tokens:] = embed_tokens_weight[-num_new_tokens:]
+                if input_embeddings.shape == embed_tokens_weight.shape:
+                    input_embeddings[-num_new_tokens:] = embed_tokens_weight[-num_new_tokens:]
+                elif embed_tokens_weight.shape[0] == num_new_tokens:
+                    input_embeddings[-num_new_tokens:] = embed_tokens_weight
+                else:
+                    raise ValueError(f"Unexpected embed_tokens_weight shape. Pretrained: {embed_tokens_weight.shape}. Current: {input_embeddings.shape}. Numer of new tokens: {num_new_tokens}.")
 
         vision_config.im_patch_token = tokenizer.convert_tokens_to_ids([DEFAULT_IMAGE_PATCH_TOKEN])[0]
 
