@@ -21,7 +21,7 @@ import json
 import logging
 import pathlib
 from typing import Dict, Optional, Sequence
-from peft import PeftModel
+
 import torch
 
 import transformers
@@ -478,11 +478,11 @@ def train():
     model.config.use_cache = False
 
     if model_args.freeze_backbone:
+        model.model.requires_grad_(False)
+    else:
         for name, param in model.named_parameters():
             if not any(nd in name for nd in ["layers.31", "layers.30","lm_head.weight","model.norm.weight"]):
                 param.requires_grad_(False)
-        # model.model.requires_grad_(False)
-
     tokenizer = transformers.AutoTokenizer.from_pretrained(
         model_args.model_name_or_path,
         cache_dir=training_args.cache_dir,

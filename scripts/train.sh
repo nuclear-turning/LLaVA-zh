@@ -1,19 +1,20 @@
-export CUDA_VISIBLE_DEVICES=0,1
+CUDA_VISIBLE_DEVICES=0,1,2,3
+
 torchrun --nnodes=1 --nproc_per_node=1 --master_port=25001 \
     llava/train/train_mem.py \
-    --model_name_or_path /home/gpuall/hehx/PretrainedModels/LanguageModels/ChatModels/Chinese-alpaca-13b-plus \
-    --data_path /home/gpuall/hehx/MLLM/data/caption/aic_wukong/chat_caption.json \
-    --image_folder /home/gpuall/hehx/MLLM/data/caption/aic_wukong/images \
-    --vision_tower /home/gpuall/hehx/PretrainedModels/MultiModalModels/chinese-clip-vit-large-patch14 \
+    --model_name_or_path $GEMINI_DATA_IN1/Chinese-alpaca-13b-plus \
+    --data_path $GEMINI_DATA_IN2/aic_wukong/chat_caption.json \
+    --image_folder $GEMINI_DATA_IN2/aic_wukong/images \
+    --vision_tower $GEMINI_DATA_IN1/chinese-clip-vit-large-patch14 \
     --freeze_backbone True \
     --tune_mm_mlp_adapter True \
     --mm_vision_select_layer -2 \
     --mm_use_im_start_end \
     --bf16 True \
-    --output_dir ./checkpoints/llava-13b-zh-pretrain \
+    --output_dir $GEMINI_DATA_OUT/checkpoints/llava-13b-zh-pretrain \
     --num_train_epochs 2 \
-    --per_device_train_batch_size 4 \
-    --per_device_eval_batch_size 2 \
+    --per_device_train_batch_size 64 \
+    --per_device_eval_batch_size 32 \
     --gradient_accumulation_steps 1 \
     --evaluation_strategy "no" \
     --save_strategy "steps" \
@@ -27,4 +28,5 @@ torchrun --nnodes=1 --nproc_per_node=1 --master_port=25001 \
     --model_max_length 2048 \
     --gradient_checkpointing True \
     --lazy_preprocess True \
-    --report_to wandb
+    --tf32 True \
+    --report_to tensorboard
