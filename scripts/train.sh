@@ -1,5 +1,7 @@
+export PATH="/root/miniconda3/bin:$PATH"
+source activate
+conda activate
 export CUDA_VISIBLE_DEVICES=0,1,2,3,
-
 torchrun --nnodes=1 --nproc_per_node=2 --master_port=25001 \
     llava/train/train_mem.py \
     --model_name_or_path $GEMINI_DATA_IN1/Chinese-alpaca-13b-plus \
