@@ -3,7 +3,7 @@ source activate
 conda activate
 #export CUDA_VISIBLE_DEVICES=0,1,2,3,
 
-torchrun --nnodes=1 --nproc_per_node=4 --master_port=25001 \
+torchrun --nnodes=1 --nproc_per_node=$GPU_NUM --master_port=25001 \
     llava/train/train_mem.py \
     --model_name_or_path $GEMINI_DATA_IN1/Chinese-alpaca-13b-plus \
     --data_path $GEMINI_DATA_IN2/aic_wukong/chat_caption.json \
