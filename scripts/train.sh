@@ -2,6 +2,7 @@ export PATH="/root/miniconda3/bin:$PATH"
 source activate
 conda activate
 export CUDA_VISIBLE_DEVICES=0,1,2,3,
+
 torchrun --nnodes=1 --nproc_per_node=4 --master_port=25001 \
     llava/train/train_mem.py \
     --model_name_or_path $GEMINI_DATA_IN1/Chinese-alpaca-13b-plus \
@@ -16,8 +17,8 @@ torchrun --nnodes=1 --nproc_per_node=4 --master_port=25001 \
     --bf16 True \
     --output_dir $GEMINI_DATA_OUT/checkpoints/llava-13b-zh-pretrain \
     --num_train_epochs 1 \
-    --per_device_train_batch_size 32 \
-    --per_device_eval_batch_size 32 \
+    --per_device_train_batch_size $LLAVA_BATCH \
+    --per_device_eval_batch_size 16 \
     --gradient_accumulation_steps 1 \
     --evaluation_strategy "no" \
     --save_strategy "steps" \
