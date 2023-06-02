@@ -1,7 +1,7 @@
 export PATH="/root/miniconda3/bin:$PATH"
 source activate
 conda activate
-export CUDA_VISIBLE_DEVICES=0,1,2,3,
+#export CUDA_VISIBLE_DEVICES=0,1,2,3,
 
 torchrun --nnodes=1 --nproc_per_node=4 --master_port=25001 \
     llava/train/train_mem.py \
@@ -17,8 +17,8 @@ torchrun --nnodes=1 --nproc_per_node=4 --master_port=25001 \
     --bf16 True \
     --output_dir $GEMINI_DATA_OUT/checkpoints/llava-13b-zh-pretrain \
     --num_train_epochs 1 \
-    --per_device_train_batch_size $LLAVA_BATCH \
-    --per_device_eval_batch_size 16 \
+    --per_device_train_batch_size $TRAIN_BATCH \
+    --per_device_eval_batch_size $EVAL_BATCH \
     --gradient_accumulation_steps 1 \
     --evaluation_strategy "no" \
     --save_strategy "steps" \
@@ -33,4 +33,4 @@ torchrun --nnodes=1 --nproc_per_node=4 --master_port=25001 \
     --gradient_checkpointing True \
     --lazy_preprocess True \
     --tf32 True \
-    --report_to tensorboard
+    --report_to wandb
