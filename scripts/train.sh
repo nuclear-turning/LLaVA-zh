@@ -33,4 +33,5 @@ torchrun --nnodes=1 --nproc_per_node=$GPU_NUM --master_port=25001 \
     --gradient_checkpointing True \
     --lazy_preprocess True \
     --tf32 True \
-    --report_to wandb
+    --report_to wandb \
+    > $GEMINI_DATA_OUT/run.log
