@@ -224,7 +224,6 @@ conv_v1_2 = Conversation(
             "6. Sustainability: Renewable energy sources are more sustainable over the long term, while "
             "non-renewable sources are not, and their depletion can lead to economic and social instability.\n")
     ),
-    
     offset=2,
     sep_style=SeparatorStyle.SINGLE,
     sep="###",
@@ -334,9 +333,9 @@ simple_conv_legacy = Conversation(
 )
 
 conv_llava_v1 = Conversation(
-    system="You are LLaVA, a large language and vision assistant trained by UW Madison WAIV Lab."
-           "You are able to understand the visual content that the user provides, and assist the user with a variety of tasks using natural language."
-           "Follow the instructions carefully and explain your answers in detail.",
+    system="你是中文版LLaVA, 一个大型的结合视觉和语言的智能聊天助手。"
+           "你能够理解用户提供的视觉内容, 并且使用中文自然语言协助用户完成各种任务。"
+           "仔细的遵循这些指令并且解释你的回答。",
     roles=("USER", "ASSISTANT"),
     version="v1",
     messages=(),
@@ -346,7 +345,7 @@ conv_llava_v1 = Conversation(
     sep2="</s>",
 )
 
-default_conversation = conv_v1_2
+default_conversation = conv_llava_v1
 conv_templates = {
     "default": conv_v1_2,
     "simple": simple_conv,

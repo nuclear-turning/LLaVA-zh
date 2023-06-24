@@ -93,7 +93,7 @@ def convert_aic(data):
     return result
 def write2json(data,output_path):
     with open(output_path,'w+') as jf:
-        json.dump(data,jf,ensure_ascii=False)
+        json.dump(data,jf,ensure_ascii=False,indent=4)
 
 def load_wukong():
     data_dir = "/home/gpuall/hehx/MLLM/data/caption/wukong_release/"
@@ -116,8 +116,6 @@ def load_aic():
     # write2json(result,output_path)
     return result
 
-# result = load_aic()+load_wukong()
-# write2json(result,"/home/gpuall/hehx/MLLM/data/caption/aic_wukong/chat_caption.json")
 
 def merge_images():
     import shutil
@@ -127,4 +125,9 @@ def merge_images():
         shutil.copy(aic_image_dir+image,"/home/gpuall/hehx/MLLM/data/caption/aic_wukong/images/"+image)
     for image in os.listdir(wukong_image_dir):
         shutil.copy(wukong_image_dir+image,"/home/gpuall/hehx/MLLM/data/caption/aic_wukong/images/"+image)
-merge_images()
+
+if __name__ == "__main__":
+    wukong_out = "/home/gpuall/hehx/MLLM/data/caption/wukong/chat_caption.json"
+    result = load_wukong()
+    write2json(result,wukong_out)
+    # merge_images()

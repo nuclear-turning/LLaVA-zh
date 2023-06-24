@@ -134,7 +134,7 @@ def eval_model(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--model-name", type=str, default="/home/gpuall/hehx/MLLM/LLaVA-zh_/checkpoints/llava-7b-zh-finetune")
+    parser.add_argument("--model-name", type=str, default=None)
     parser.add_argument("--image-file", type=str, required=True)
     parser.add_argument("--query", type=str, required=True)
     parser.add_argument("--mm-projector", type=str, default=None)

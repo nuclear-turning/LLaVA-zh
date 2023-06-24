@@ -560,6 +560,13 @@ def train():
 
     if model_args.freeze_backbone:
         model.model.requires_grad_(False)
+    else:
+        import re
+        for p_name,p in model.named_parameters():
+            if not any(re.search(p_n,p_name) for p_n in ["model.norm.weight","lm_head.weight",
+            "model.embed_tokens.weight","model.layers\.[3][8-9]\."]):
+                # print(p_name)
+                p.requires_grad_(False)
 
     if 'mpt' in model_args.model_name_or_path:
         tokenizer = transformers.AutoTokenizer.from_pretrained(
