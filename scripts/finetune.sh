@@ -1,3 +1,4 @@
+# export GPU_NUM=4 TRAIN_BATCH=2 EVAL_BATCH=2
 export PATH="/root/miniconda3/bin:$PATH"
 source activate
 conda activate
@@ -13,7 +14,7 @@ torchrun --nnodes=1 --nproc_per_node=$GPU_NUM --master_port=25001 \
     --mm_vision_select_layer -2 \
     --mm_use_im_start_end True \
     --bf16 True \
-    --output_dir $GEMINI_DATA_OUT/llava-zh-13b-finetune \
+    --output_dir $GEMINI_DATA_OUT/checkpoints/llava-zh-13b-finetune \
     --num_train_epochs 3 \
     --per_device_train_batch_size $TRAIN_BATCH \
     --per_device_eval_batch_size $EVAL_BATCH \
@@ -31,6 +32,6 @@ torchrun --nnodes=1 --nproc_per_node=$GPU_NUM --master_port=25001 \
     --model_max_length 2048 \
     --gradient_checkpointing True \
     --lazy_preprocess True \
-    --report_to wandb
+    --report_to tensorboard
     # --fsdp "full_shard auto_wrap" \
     # --fsdp_transformer_layer_cls_to_wrap 'LlamaDecoderLayer'
