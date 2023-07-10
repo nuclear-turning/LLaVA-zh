@@ -1,9 +1,9 @@
-# export GPU_NUM=2 TRAIN_BATCH=24 EVAL_BATCH=16
+# export GPU_NUM=2 TRAIN_BATCH=16 EVAL_BATCH=16
 torchrun --nnodes=1 --nproc_per_node=$GPU_NUM --master_port=25001 \
     llava/train/train_mem.py \
     --model_name_or_path $GEMINI_DATA_IN1/Chinese-alpaca-13b-plus \
-    --data_path $GEMINI_DATA_IN3/caption/ai_challenger/caption_chat.json \
-    --image_folder $GEMINI_DATA_IN3/caption/ai_challenger/images/ \
+    --data_path $GEMINI_DATA_IN3/stage1/llava_pretrain.json \
+    --image_folder $GEMINI_DATA_IN3/stage1/images/ \
     --version 1 \
     --vision_tower $GEMINI_DATA_IN2/chinese-clip-vit-large-patch14/ \
     --freeze_backbone True \
