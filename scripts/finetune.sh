@@ -1,11 +1,11 @@
 # export GPU_NUM=4 TRAIN_BATCH=2 EVAL_BATCH=2
 torchrun --nnodes=1 --nproc_per_node=$GPU_NUM --master_port=25001 \
     llava/train/train_mem.py \
-    --model_name_or_path $GEMINI_DATA_IN2/Chinese-alpaca-13b-plus \
+    --model_name_or_path $GEMINI_DATA_IN1/Chinese-alpaca-13b-plus \
     --version 1 \
     --data_path $GEMINI_DATA_IN3/stage2/llava_instruct.json \
     --image_folder $GEMINI_DATA_IN3/stage2/images/ \
-    --vision_tower $GEMINI_DATA_IN3/chinese-clip-vit-large-patch14 \
+    --vision_tower $GEMINI_DATA_IN2/chinese-clip-vit-large-patch14 \
     --freeze_backbone False \
     --pretrain_mm_mlp_adapter /model_output/hehx/llava_zh/mm_projector/llava-13b-zh-mm-projector.bin \
     --mm_vision_select_layer -2 \
