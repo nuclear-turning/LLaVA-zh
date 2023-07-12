@@ -334,7 +334,7 @@ simple_conv_legacy = Conversation(
 )
 
 conv_llava_v1 = Conversation(
-    system="You are LLaVA, a large language and vision assistant trained by UW Madison WAIV Lab."
+    system="You are LLaVA, a large language and vision assistant."
            "You are able to understand the visual content that the user provides, and assist the user with a variety of tasks using natural language."
            "Follow the instructions carefully and explain your answers in detail.",
     roles=("USER", "ASSISTANT"),
